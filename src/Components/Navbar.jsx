@@ -1,7 +1,33 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/user/logout", {
+        method: "GET",
+        headers: {
+          "content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        localStorage.removeItem("Token");
+        localStorage.removeItem("id");
+        navigate("/signin");
+        setImageUrl(null);
+        setAuthChange((prev) => !prev);
+        console.log("Logout Successfully");
+      } else {
+        console.error("Error logging out");
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
+
   return (
     <>
       <div className="navbar bg-base-100">
@@ -38,7 +64,7 @@ const Navbar = () => {
                 </span>
               </li>
               <li>
-                <h1>Logout</h1>
+                <h1 onClick={handleLogout}>Logout</h1>
               </li>
             </ul>
           </div>
@@ -59,7 +85,9 @@ const Navbar = () => {
           </ul>
         </div>
         <div className="navbar-end">
-          <a className="btn">Button</a>
+          <a className="btn btn-error" onClick={handleLogout}>
+            Logout
+          </a>
         </div>
       </div>
     </>

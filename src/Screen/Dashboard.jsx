@@ -112,9 +112,9 @@ const Dashboard = () => {
               ))}
             </div>
           ) : (
-            <div className="w-full flex justify-center ">
-              <span className="loading loading-bars loading-lg"></span>
-            </div>
+            <h1 className="flex justify-center items-center h-screen">
+              <span className="loading loading-spinner loading-lg"></span>
+            </h1>
           )}
         </div>
       </div>

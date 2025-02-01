@@ -15,6 +15,9 @@ const Home = () => {
           throw new Error("Failed to fetch blogs");
         }
         const data = await response.json();
+        console.log(data.data);
+        const userId = data.data[0].userRef._id;
+        localStorage.setItem("id", userId);
         setBlog(data.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -30,10 +33,9 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="text-center mt-10">
-        <div className="spinner">Loading...</div>{" "}
-        {/* Optional: Add a spinner */}
-      </div>
+      <h1 className="flex justify-center items-center h-screen">
+        <span className="loading loading-bars loading-lg"></span>
+      </h1>
     );
   }
 

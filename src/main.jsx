@@ -7,6 +7,7 @@ import Layout from "./Layout.jsx";
 import Signup from "./Screen/Signup.jsx";
 import Signin from "./Screen/Siginin.jsx";
 import Home from "./Screen/Home.jsx";
+import ProtectedRoutes from "./Components/Protectedroutes.jsx";
 import Dashboard from "./Screen/Dashboard.jsx";
 import SingleBlog from "./Screen/SingleBlog.jsx";
 const router = createBrowserRouter([
@@ -29,7 +30,8 @@ const router = createBrowserRouter([
       },
       {
         path: "/dashboard",
-        element: <Dashboard />,
+        element: <ProtectedRoutes component={<Dashboard/>}/>,
+        // element:<Dashboard/>
       },
       {
         path: "/singleblog/:id",
