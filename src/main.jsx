@@ -8,6 +8,7 @@ import Signup from "./Screen/Signup.jsx";
 import Signin from "./Screen/Siginin.jsx";
 import Home from "./Screen/Home.jsx";
 import Dashboard from "./Screen/Dashboard.jsx";
+import SingleBlog from "./Screen/SingleBlog.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: <Dashboard />,
+      },
+      {
+        path: "/singleblog/:id",
+        element: <SingleBlog />,
       },
     ],
   },
