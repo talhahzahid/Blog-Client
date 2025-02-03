@@ -8,6 +8,7 @@ const Dashboard = () => {
   const [blog, setBlog] = useState("");
   const [refresh, setRefresh] = useState(false); // Add a refresh state
 
+  // add blog 
   const token = localStorage.getItem("Token");
   const handleDashborad = async (e) => {
     e.preventDefault();
@@ -41,6 +42,7 @@ const Dashboard = () => {
     setDescription("");
     setRefresh((prev) => !prev); // Toggle refresh state to trigger useEffect
   };
+  // user all blog 
   useEffect(() => {
     const userBlogFetch = async () => {
       try {
@@ -64,9 +66,17 @@ const Dashboard = () => {
     };
     userBlogFetch();
   }, [refresh]);
+  // delete blog 
+  const deleteBlog = async () =>{
+
+  }
+  // update blog
+  const updateBlog = async () =>{
+
+  }
   return (
     <>
-      <div className=" bg-[#020617]  text-[#2563eb]">
+      <div className=" bg-[#020617] min-h-screen text-[#2563eb]">
         <div className="flex justify-center items-center h-[70vh] ">
           <form
             onSubmit={handleDashborad}

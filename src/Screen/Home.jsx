@@ -1,36 +1,75 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { SlLike } from "react-icons/sl";
 
 const Home = () => {
   const [blog, setBlog] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // Added error state for better user feedback
-
+  const [error, setError] = useState(null);
+  const [Token, setToken] = useState(localStorage.getItem("Token"));
+  const [like, setLike] = useState("");
+  const [liked, setLiked] = useState("");
+  const [refresh, setRefresh] = useState(""); // state for like then update
+  const [data, setData] = useState(); // for datastate
+  // Fetch all blogs on component mount
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
         const response = await fetch("http://localhost:8000/api/v1/alluser");
-        console.log(response);
         if (!response.ok) {
           throw new Error("Failed to fetch blogs");
         }
         const data = await response.json();
-        console.log(data.data);
-        const userId = data.data[0].userRef._id;
-        localStorage.setItem("id", userId);
         setBlog(data.data);
+        setData(data.data);
       } catch (error) {
         console.error("Error fetching data:", error);
-        setError(
-          "An error occurred while fetching blogs. Please try again later."
-        );
+        setError("An error occurred. Please check your connection.");
       } finally {
         setLoading(false);
       }
     };
     fetchBlogs();
-  }, []);
+  }, [refresh]);
+  // console.log("data data" , data)
+  const userLike = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/like/${id}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${Token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        console.log("Like updated", data);
+        setLike(data.message);
+        setRefresh(data);
+        setBlog((prevBlogs) =>
+          prevBlogs.map((item) =>
+            item._id === id ? { ...item, liked: !item.liked } : item
+          )
+        );
+      } else {
+        setError(data.message || "Something went wrong");
+        // setLike(data.message)
+      }
+    } catch (error) {
+      setError(error.message || "An error occurred while liking the post");
+    }
+  };
+  // console.log(data)
+  useEffect(() => {
+    if (data) {
+      const timer = setTimeout(() => {
+        setLike(data.message);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [data]);
 
+  // Loading state
   if (loading) {
     return (
       <h1 className="flex justify-center items-center h-screen">
@@ -39,17 +78,22 @@ const Home = () => {
     );
   }
 
+  // Error state
   if (error) {
     return <div className="text-center mt-10 text-red-500">{error}</div>;
   }
 
+  if (!blog.length) {
+    return <div className="text-center mt-10">No blogs available.</div>;
+  }
+
   return (
-    <div className=" bg-[#020617] text-[#2563eb]">
-      <div className="min-h-screen  p-6 ">
+    <div className="bg-[#020617] text-[#2563eb]">
+      <div className="min-h-screen p-6">
         <h1 className="text-3xl font-bold text-center mb-8">All Blogs</h1>
+        {like && <h1 className="text-center text-xl">{like}</h1>}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {blog.map((item) => {
-            // Handle null or undefined userRef safely
             const userRef = item.userRef || {};
             const username = userRef.username || "Unknown User";
             const imageUrl = userRef.imageUrl || "/default-avatar.png";
@@ -79,7 +123,14 @@ const Home = () => {
                   {item.title}
                 </h2>
                 <p className="text-gray-600 line-clamp-3">{item.description}</p>
-                <div className="mt-4 flex justify-end">
+                <div className="mt-4 flex justify-between">
+                  <h1
+                    className="text-xl cursor-pointer"
+                    onClick={() => userLike(item._id)}
+                  >
+                    <SlLike />
+                    <span className="ml-2">{item.like.length}</span> <br />
+                  </h1>
                   <p className="underline">
                     <Link to={`/singleblog/${item._id}`}>Read More</Link>
                   </p>

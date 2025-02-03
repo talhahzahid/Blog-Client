@@ -10,6 +10,7 @@ import Home from "./Screen/Home.jsx";
 import ProtectedRoutes from "./Components/Protectedroutes.jsx";
 import Dashboard from "./Screen/Dashboard.jsx";
 import SingleBlog from "./Screen/SingleBlog.jsx";
+import Profile from "./Screen/Profile.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -30,12 +31,16 @@ const router = createBrowserRouter([
       },
       {
         path: "/dashboard",
-        element: <ProtectedRoutes component={<Dashboard/>}/>,
+        element: <ProtectedRoutes component={<Dashboard />} />,
         // element:<Dashboard/>
       },
       {
         path: "/singleblog/:id",
         element: <SingleBlog />,
+      },
+      {
+        path: "/profile",
+        element: <ProtectedRoutes component={<Profile />} />,
       },
     ],
   },

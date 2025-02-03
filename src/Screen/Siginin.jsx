@@ -25,7 +25,8 @@ const Siginin = () => {
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem("Token", data.accessToken);
-        console.log("data", data);
+        localStorage.setItem("id" , data.user._id)
+        // console.log("data", data.user._id);
         navigate("/dashboard");
       } else {
         setError(data.message || "Error Occurred");
@@ -71,7 +72,7 @@ const Siginin = () => {
           <p className="text-center">
             New to Blogify?{" "}
             <span className="text-[#2563eb]">
-              <Link>Join now</Link>
+              <Link to="/signup">Join now</Link>
             </span>
           </p>
         </form>
