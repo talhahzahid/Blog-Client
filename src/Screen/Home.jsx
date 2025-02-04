@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SlLike } from "react-icons/sl";
+import { FaRegComment } from "react-icons/fa";
 
 const Home = () => {
   const [blog, setBlog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [Token, setToken] = useState(localStorage.getItem("Token"));
-  const [like, setLike] = useState("");
-  const [liked, setLiked] = useState("");
-  const [refresh, setRefresh] = useState(""); // state for like then update
-  const [data, setData] = useState(); // for datastate
-  // Fetch all blogs on component mount
+  const [refresh, setRefresh] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentsText, setCommentsText] = useState({});
+
+  // Fetch Blogs
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
@@ -21,17 +22,18 @@ const Home = () => {
         }
         const data = await response.json();
         setBlog(data.data);
-        setData(data.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("An error occurred. Please check your connection.");
+        console.error("Error fetching blogs:", error);
+        setError("An error occurred while fetching blogs.");
       } finally {
         setLoading(false);
       }
     };
+
     fetchBlogs();
   }, [refresh]);
-  // console.log("data data" , data)
+
+  // Handle Like
   const userLike = async (id) => {
     try {
       const response = await fetch(`http://localhost:8000/api/v1/like/${id}`, {
@@ -43,33 +45,78 @@ const Home = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        console.log("Like updated", data);
-        setLike(data.message);
-        setRefresh(data);
-        setBlog((prevBlogs) =>
-          prevBlogs.map((item) =>
-            item._id === id ? { ...item, liked: !item.liked } : item
-          )
-        );
+        setRefresh((prev) => !prev);
       } else {
-        setError(data.message || "Something went wrong");
-        // setLike(data.message)
+        setError(data.message || "Something went wrong while liking the post");
       }
     } catch (error) {
       setError(error.message || "An error occurred while liking the post");
     }
   };
-  // console.log(data)
-  useEffect(() => {
-    if (data) {
-      const timer = setTimeout(() => {
-        setLike(data.message);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [data]);
 
-  // Loading state
+  // Handle Comment Change
+  const handleCommentChange = (event, id) => {
+    setCommentsText({
+      ...commentsText,
+      [id]: event.target.value,
+    });
+  };
+
+  // Handle Comment Post
+  const postComment = async (event, id) => {
+    event.preventDefault();
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/v1/comment/${id}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${Token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ comment: commentsText[id] }),
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setCommentsText({ ...commentsText, [id]: "" });
+      } else {
+        setError(
+          data.message || "Something went wrong while posting the comment"
+        );
+      }
+    } catch (error) {
+      setError(error.message || "An error occurred while posting the comment");
+    }
+  };
+
+  // Fetch all comments for a blog
+  const allUserComment = async (id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/v1/getcomment/${id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        console.log(data.comments);
+        setComments(data.comments);
+      } else {
+        setError(
+          data.message || "Something went wrong while fetching comments"
+        );
+      }
+    } catch (error) {
+      setError(error.message || "An error occurred while fetching comments");
+    }
+  };
+
+  // Loading State
   if (loading) {
     return (
       <h1 className="flex justify-center items-center h-screen">
@@ -78,11 +125,12 @@ const Home = () => {
     );
   }
 
-  // Error state
+  // Error State
   if (error) {
     return <div className="text-center mt-10 text-red-500">{error}</div>;
   }
 
+  // No Blogs Available
   if (!blog.length) {
     return <div className="text-center mt-10">No blogs available.</div>;
   }
@@ -91,7 +139,6 @@ const Home = () => {
     <div className="bg-[#020617] text-[#2563eb]">
       <div className="min-h-screen p-6">
         <h1 className="text-3xl font-bold text-center mb-8">All Blogs</h1>
-        {like && <h1 className="text-center text-xl">{like}</h1>}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {blog.map((item) => {
             const userRef = item.userRef || {};
@@ -128,12 +175,81 @@ const Home = () => {
                     className="text-xl cursor-pointer"
                     onClick={() => userLike(item._id)}
                   >
-                    <SlLike />
-                    <span className="ml-2">{item.like.length}</span> <br />
+                    <SlLike className="inline" />
+                    <span className="ml-2">{item.like.length}</span>
                   </h1>
                   <p className="underline">
                     <Link to={`/singleblog/${item._id}`}>Read More</Link>
                   </p>
+                </div>
+
+                {/* Comment Form */}
+                <div className="max-w-xs w-full m-auto p-3">
+                  <form
+                    action=""
+                    className="flex justify-center items-center space-x-3 w-full"
+                    onSubmit={(e) => postComment(e, item._id)}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Enter Comment"
+                      value={commentsText[item._id] || ""}
+                      onChange={(e) => handleCommentChange(e, item._id)}
+                      className="input input-bordered w-full h-12 px-4 text-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+                    />
+                    <button
+                      type="submit"
+                      className="btn btn-primary h-12 px-6 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+                    >
+                      Post
+                    </button>
+                  </form>
+
+                  {/* Open Comments Modal */}
+                  <button
+                    className="btn btn-primary text-center w-full m-auto mt-3"
+                    onClick={() => {
+                      allUserComment(item._id); // Fetch comments for the blog
+                      document.getElementById("my_modal_3").showModal(); // Show the modal
+                    }}
+                  >
+                    Open Comments
+                  </button>
+
+                  {/* Modal Dialog */}
+                  <dialog id="my_modal_3" className="modal">
+                    <div className="modal-box">
+                      <form method="dialog">
+                        <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+                          ✕
+                        </button>
+                      </form>
+                      <h3 className="font-bold text-lg">Hello Readers</h3>
+                      <div className="py-4">
+                        {comments.length > 0 ? (
+                          comments.map((item) => (
+                            <div key={item._id} className="comment-item">
+                              <div className="border border-black mt-2 p-2 flex gap-3">
+                                <img
+                                  src={item.userId.imageUrl}
+                                  alt="User Avatar"
+                                  className="w-10 rounded-lg"
+                                />
+                                <div>
+                                  <h4 className="text-black">
+                                    Author: {item.userId.username}
+                                  </h4>
+                                  <p>{item.comment}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <h1>No comments yet.</h1>
+                        )}
+                      </div>
+                    </div>
+                  </dialog>
                 </div>
               </div>
             );
