@@ -5,7 +5,7 @@ const Singleblog = () => {
   const { id } = useParams();
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
-
+// fetch single user blog 
   useEffect(() => {
     const fetchBlog = async () => {
       try {
